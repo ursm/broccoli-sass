@@ -1,4 +1,5 @@
 var path = require('path')
+var fs = require('fs')
 var mkdirp = require('mkdirp')
 var includePathSearcher = require('include-path-searcher')
 var CachingWriter = require('broccoli-caching-writer')
@@ -39,14 +40,16 @@ SassCompiler.prototype.updateCache = function(includePaths, destDir) {
       file: includePathSearcher.findFileSync(self.inputFile, includePaths),
       includePaths: includePaths,
       outFile: destFile,
-      success: function() {
-        resolve(this)
+      success: function(result) {
+        fs.writeFile(destFile, result.css, function(err) {
+          err ? reject(err) : resolve(this)
+        })
       },
       error: function(err) {
         reject(err)
       }
     }
     _.merge(sassOptions, self.sassOptions)
-    sass.renderFile(sassOptions)
+    sass.render(sassOptions)
   })
 }
